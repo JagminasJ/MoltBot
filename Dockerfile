@@ -9,13 +9,10 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# Install MoltBot using official installer
-# This installs the actual CLI tool
-RUN curl -fsSL https://install.molt.bot | sh || \
-    echo "MoltBot installer completed (may need verification)"
-
-# Find where moltbot was installed for verification
-RUN which moltbot || echo "moltbot location will be verified at runtime"
+# Try to install MoltBot during build (may fail due to DNS, will retry at runtime)
+# This is optional - entrypoint will handle installation if this fails
+RUN curl -fsSL https://install.molt.bot 2>/dev/null | sh || \
+    echo "MoltBot installer will be attempted at runtime if needed"
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh ./

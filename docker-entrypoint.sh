@@ -9,10 +9,33 @@ cd /app
 # Verify MoltBot installation
 if ! command -v moltbot >/dev/null 2>&1; then
     echo "⚠️  MoltBot not found in PATH, attempting to install..."
-    curl -fsSL https://install.molt.bot | sh || {
-        echo "❌ Failed to install MoltBot"
+    
+    # Try multiple installation methods
+    INSTALL_SUCCESS=false
+    
+    # Method 1: Try official installer
+    if curl -fsSL https://install.molt.bot 2>/dev/null | sh; then
+        INSTALL_SUCCESS=true
+        echo "✅ Installed via official installer"
+    # Method 2: Try alternative URL
+    elif curl -fsSL https://get.molt.bot 2>/dev/null | sh; then
+        INSTALL_SUCCESS=true
+        echo "✅ Installed via alternative URL"
+    # Method 3: Try with DNS workaround (if we know the IP)
+    else
+        echo "⚠️  Standard installation methods failed, checking if already installed..."
+        # Check if it was installed during Docker build
+        if [ -f "/root/.local/bin/moltbot" ] || [ -f "/usr/local/bin/moltbot" ]; then
+            INSTALL_SUCCESS=true
+            echo "✅ Found MoltBot from Docker build"
+        fi
+    fi
+    
+    if [ "$INSTALL_SUCCESS" = false ]; then
+        echo "❌ Failed to install MoltBot - DNS resolution may be blocked"
+        echo "💡 This may be a network/DNS issue in the container environment"
         exit 1
-    }
+    fi
 fi
 
 # Verify installation
